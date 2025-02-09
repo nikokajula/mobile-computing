@@ -10,18 +10,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import com.example.hw1.SampleData.ConversationScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
 object Profile
 @Serializable
 object Conversation
+@Serializable
+object NewMessage
 
 @Composable
 fun MyAppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-
     ) {
     NavHost(
         modifier = modifier,
@@ -33,8 +35,14 @@ fun MyAppNavHost(
         }
         composable<Conversation> {
             ConversationScreen(
+                onNavigateToNewMessage = { navController.navigate(route = NewMessage) },
                 onNavigateToProfile = { navController.navigate(route = Profile) },
                 SampleData.conversationSample
+            )
+        }
+        composable<NewMessage> {
+            NewMessageScreen(
+                onNavigateToConversation = { navController.navigate(route = Profile) },
             )
         }
     }
