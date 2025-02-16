@@ -1,5 +1,7 @@
 package com.example.hw1
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +33,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import java.io.File
 
 data class Message(val author: String, val body: String)
 
@@ -42,10 +48,12 @@ data class Message(val author: String, val body: String)
 object SampleData {
     @Composable
     fun ConversationScreen(
+        applicationContext: Context,
+        messages: SavedMessageDao,
         onNavigateToNewMessage: () -> Unit,
-        onNavigateToProfile: () -> Unit,
-        messages: List<Message>
+        onNavigateToProfile: () -> Unit
     ) {
+        var id = 0
         Button(onClick = onNavigateToNewMessage) {
             Text(text = "New Message")
         }
@@ -59,8 +67,9 @@ object SampleData {
             )
 
             LazyColumn {
-                items(messages) { message ->
+                items(messages.getAll()) { message ->
                     MessageCard(
+                        applicationContext,
                         onNavigateToProfile,
                         message
                     )
@@ -72,8 +81,9 @@ object SampleData {
 
     @Composable
     fun MessageCard(
+        applicationContext: Context,
         onNavigateToProfile: () -> Unit,
-        msg: Message
+        msg: SavedMessage
     ) {
         Row(modifier = Modifier.padding(all = 8.dp)) {
             Image(
@@ -93,30 +103,43 @@ object SampleData {
 
             // We toggle the isExpanded variable when we click on this Column
             Column(modifier = Modifier.clickable { isExpanded = !isExpanded }) {
-                Text(
-                    text = msg.author,
-                    color = MaterialTheme.colorScheme.secondary,
-                    style = MaterialTheme.typography.titleSmall
-                )
+                msg.userName?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                msg.image?.let {
+                    val image = File(applicationContext.filesDir.path + "/" + msg.image)
+                    image.path
+                    Image(
+                        painter = rememberAsyncImagePainter(image),
+                        contentDescription = "",
+                    )
+                }
 
                 Surface(
                     shape = MaterialTheme.shapes.medium,
                     shadowElevation = 1.dp,
                 ) {
-                    Text(
-                        text = msg.body,
-                        modifier = Modifier.padding(all = 4.dp),
-                        // If the message is expanded, we display all its content
-                        // otherwise we only display the first line
-                        maxLines = if (isExpanded) Int.MAX_VALUE else 1,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    msg.message?.let {
+                        Text(
+                            text = it,
+                            modifier = Modifier.padding(all = 4.dp),
+                            // If the message is expanded, we display all its content
+                            // otherwise we only display the first line
+                            maxLines = if (isExpanded) Int.MAX_VALUE else 1,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
+
             }
         }
     }
+
     // Sample conversation data
     val conversationSample = listOf(
         Message(
